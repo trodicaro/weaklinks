@@ -10,7 +10,7 @@ router.post('/', function(req, res, next) {
     let domain = getOrganizationName(primaryUrl).then(function(val) {
         console.log(val);
     }).catch(function(err) {
-        console.err(err);
+        console.log(err);
     });
 
     let merchantId = getMerchantIdFromLinks(primaryUrl);
