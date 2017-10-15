@@ -1,8 +1,11 @@
 document.addEventListener("DOMContentLoaded", function(event) {
         console.log(event);
 
-        function updateIcon(url){
-            alert(url);
+        function updateIcon(){
+            chrome.tabs.getSelected(null, function(tab) {
+                var currentURL = tab.url;
+                alert(currentURL);
+            });
             var numberReports = 67;
             if (numberReports >= 60){
                 chrome.browserAction.setIcon({path:"icon1.png"});
@@ -15,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
         //We have permission to access the activeTab, so we can call chrome.tabs.executeScript:
         chrome.tabs.executeScript({
-            code:  updateIcon(chrome.tabs.url)
+            code:  updateIcon()
                 })
         }
 );
