@@ -1,14 +1,25 @@
 {
-  "name": "A browser action which changes its icon when clicked",
-  "description": "Change browser action color when its icon is clicked",
-  "version": "1.2",
+  "manifest_version": 2,
+
+  "name": "Getting started example",
+  "description": "This extension allows the user to change the background color of the current page.",
+  "version": "1.0",
+
   "browser_action": {
-    "default_title": "Test",
-    "default_popup": "index.html"
+    "default_icon": "icon.png",
+    "default_popup": "geo.html",
+	"default_title": "Click here!"
   },
   "permissions": [
     "activeTab",
-    "<all_urls>"
+    "storage"
   ],
-  "manifest_version": 2
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["jquery-3.2.1.min.js", "popup.js"]
+    }
+  ]
 }
