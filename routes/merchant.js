@@ -1,11 +1,16 @@
-require('dotenv').config()
+require('dotenv').config();
 var express = require('express');
 var router = express.Router();
+var https = require('https');
+var querystring = require('querystring');
 
 router.get('/', function(req, res, next) {
-    var links = ["http://greensburg.k12.in.us", "https://www.facebook.com/oglethorpefeed", "https://www.yelp.com/biz/oglethorpe-feed-seed-and-farm-supply-crawford"];
-    console.log(links);
-    var merchantId = getMerchantIdFromLinks(links);
+    var domains = ["http://greensburg.k12.in.us", "https://www.facebook.com/oglethorpefeed", "https://www.yelp.com/biz/oglethorpe-feed-seed-and-farm-supply-crawford"];
+    primaryUrl = domains[0];
+
+    getOrganizationName(primaryUrl);
+
+    var merchantId = getMerchantIdFromLinks(domains);
     var fraudCount = merchantId === null ? 0 : getFraudCountFromMerchantId(merchantId) ;
     res.writeHead(200, {"Content-Type": "application/json"});
     var json = JSON.stringify({
@@ -14,8 +19,73 @@ router.get('/', function(req, res, next) {
     res.end(json);
 });
 
-function getMerchantIdFromLinks(links){
+function getOrganizationName(domain) {
+  var url = process.env.WHOIS_API_ENDPOINT;
+  var username = process.env.WHOIS_USER;
+  var password = process.env.WHOIS_PASS;
+
+  var parameters = {
+      domainName: primaryUrl,
+      username: username,
+      password: password,
+      outputFormat: 'json'
+  };
+
+  url = url + querystring.stringify(parameters);
+
+  https.get(url, function (res) {
+      const statusCode = res.statusCode;
+
+      if (statusCode !== 200) {
+          console.log('Request failed: '
+              + statusCode
+          );
+      }
+
+      var rawData = '';
+
+      res.on('data', function(chunk) {
+          rawData += chunk;
+      });
+      res.on('end', function () {
+          try {
+              var parsedData = JSON.parse(rawData);
+              if (parsedData.WhoisRecord) {
+                console.log(parsedData.WhoisRecord.registrant.organization);
+              } else {
+                  console.log(parsedData);
+              }
+          } catch (e) {
+              return e.message;
+          }
+      })
+  }).on('error', function(e) {
+      return e.message;
+  });
+}
+
+function getMerchantIdFromLinks(domains){
     //  api call to see if link return merchant
+    var request = require('request');
+    var url = process.env.MERCHANT_VERIFICATION_POINT_API
+
+    var queryParams = '?' + encodeURIComponent('requestHeader.version') + '=' + encodeURIComponent('3.2')+
+    '&' + encodeURIComponent('requestHeader.format') + '=' + encodeURIComponent('json')+ '&' +
+    encodeURIComponent('requestHeader.applicationKey') + '=' +
+    encodeURIComponent(process.env.API_KEY)+ '&' +
+    encodeURIComponent('listControl.startIndex') + '=' + encodeURIComponent('0')+ '&' +
+    encodeURIComponent('listControl.segmentSize') + '=' + encodeURIComponent('10')+ '&' +
+    encodeURIComponent('listControl.segmentWindow') + '=' + encodeURIComponent('3')+ '&' +
+    encodeURIComponent('apikey') + '=' + encodeURIComponent(process.env.API_KEY);
+
+    request({
+        url: url + queryParams,
+        method: 'GET'
+      }, function (error, response) {
+      // console.log('Getting merchant info!!!!! *******');
+      //console.log('Status', response);
+    });
+
     var MerchantId = process.env.MERCHANT_ID;
     return MerchantId;
 }
@@ -40,7 +110,6 @@ function getFraudCountFromMerchantId(MerchantId){
           var request = require('request');
           var url = process.env.FRAUD_ALERTS_API_ENDPOINT.replace(/{orgid}/g, encodeURIComponent(MerchantId));
           var queryParams = '?' + encodeURIComponent('fromDate') + '=' + encodeURIComponent('2015-01-01')+ '&' + encodeURIComponent('toDate') + '=' + encodeURIComponent('2016-10-15');
-          console.log(request);
           request({
               url: url + queryParams,
               headers: { 'x-dfs-c-app-cert': process.env.APP_CERT, 'x-dfs-api-plan': process.env.API_PLAN, 'Authorization':'Bearer ' + token },
