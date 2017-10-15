@@ -1,74 +1,109 @@
 require('dotenv').config();
 var express = require('express');
 var router = express.Router();
-const request = require('request');
-var querystring = require('querystring');
+var request = require('request');
+// var https = require('https');
+var queryString = require('querystring');
 
 router.post('/', function(req, res, next) {
     let primaryUrl = req.body.domainName;
-    console.log(req.body.domainName);
-    let domain = getOrganizationName(primaryUrl).then(function(val) {
-        console.log(val);
-    }).catch(function(err) {
-        console.log(err);
-    });
+    // console.log("primaryUrl");
+    // console.log(primaryUrl);
 
-    let merchantId = getMerchantIdFromLinks(primaryUrl);
-    let fraudCount = merchantId === null ? 0 : getFraudCountFromMerchantId(merchantId) ;
+    var organizationName = getOrganizationName(primaryUrl);
+
+    console.log('organizationName');
+    console.log(organizationName);
+
+    var merchantId = getMerchantIdFromMerchantAPI(organizationName);
+
+    var fraudCount = merchantId === null ? 0 : getFraudCountFromMerchantId(merchantId) ;
     res.writeHead(200, {"Content-Type": "application/json"});
-    let json = JSON.stringify({
+    var json = JSON.stringify({
         fraud_count: fraudCount
     });
     res.end(json);
 });
 
-function getOrganizationName(domain){
+function getOrganizationName(primaryUrl){
     var url = process.env.WHOIS_API_ENDPOINT;
     var username = process.env.WHOIS_USER;
     var password = process.env.WHOIS_PASS;
 
     var parameters = {
-        domainName: domain,
+        domainName: primaryUrl,
         username: username,
         password: password,
         outputFormat: 'json'
     };
 
-    url = url + querystring.stringify(parameters);
-    return new Promise(function(resolve, reject){
-        request( url , function (error, response, body) {
-            // in addition to parsing the value, deal with possible errors
-            if (error) return reject(error);
-            try {
-                // JSON.parse() can throw an exception if not valid JSON
-                resolve(JSON.parse(body).WhoisRecord.registrant.organization);
-            } catch(e) {
-                reject(e);
-            }
-        });
+    url = url + queryString.stringify(parameters);
+
+    console.log("WHOIS URL");
+    console.log(url);
+
+    var request = require('request');
+
+    request({
+        url: url,
+        method: 'GET'
+      }, function (error, response) {
+      console.log('WhoIs Org Name:');
+      if (response.body) {
+        console.log(response.body);
+        // return response.body.WhoisRecord.registrant
+      } else { return };
     });
+
+    // https.get(url, function(result) {
+    //   const statusCode = result.statusCode;
+
+    //   if (statusCode !== 200) {
+    //     console.log("request failed");
+    //   }
+
+    //   var rawData = '';
+
+    //   result.on('data', function(chunk) {
+    //     rawData += chunk;
+    //   });
+
+    //   result.on('end', function(){
+    //     try {
+    //       var parsedData = JSON.parse(rawData);
+    //       if (parsedData.WhoisRecord) {
+    //         console.log(parsedData.WhoisRecord.registrant.organization);
+    //         return parsedData.WhoisRecord.registrant.organization;
+    //       } else { return }
+    //     } catch (e) { return }
+    //   }).on('error', function(e) {return} );
+    // });
+
 }
 
-function getMerchantIdFromLinks(primaryUrl){
+function getMerchantIdFromMerchantAPI(organizationName){
     //  api call to see if link return merchant
     var request = require('request');
     var url = process.env.MERCHANT_VERIFICATION_POINT_API
 
     var queryParams = '?' + encodeURIComponent('requestHeader.version') + '=' + encodeURIComponent('3.2')+
     '&' + encodeURIComponent('requestHeader.format') + '=' + encodeURIComponent('json')+ '&' +
-    encodeURIComponent('requestHeader.applicationKey') + '=' +
-    encodeURIComponent(process.env.API_KEY)+ '&' +
+    encodeURIComponent('requestHeader.applicationKey') + '=' + encodeURIComponent(process.env.API_KEY)+ '&' +
     encodeURIComponent('listControl.startIndex') + '=' + encodeURIComponent('0')+ '&' +
     encodeURIComponent('listControl.segmentSize') + '=' + encodeURIComponent('10')+ '&' +
     encodeURIComponent('listControl.segmentWindow') + '=' + encodeURIComponent('3')+ '&' +
-    encodeURIComponent('apikey') + '=' + encodeURIComponent(process.env.API_KEY);
+    encodeURIComponent('searchCriteria.filterField') + '=' + encodeURIComponent('name')+ '&' +
+    encodeURIComponent('searchCriteria.filterValue') + '=' + encodeURIComponent(organizationName);
+
+    console.log("url + queryParams");
+    console.log(url + queryParams);
 
     request({
         url: url + queryParams,
         method: 'GET'
       }, function (error, response) {
       console.log('Getting merchant info!!!!! *******');
-      console.log('Status', response);
+      // console.log('Status', response);
     });
 
     var MerchantId = process.env.MERCHANT_ID;
