@@ -13,19 +13,8 @@ router.post('/', function(req, res, next) {
         console.log(err);
     });
 
-    console.log(domain);
-
-    let merchantId = getMerchantIdFromLinks(primaryUrl).then(function(val) {
-        console.log(val);
-    }).catch(function(err) {
-        console.log(err);
-    });
-
-    let fraudCount = merchantId === null ? 0 : getFraudCountFromMerchantId(merchantId).then(function(val) {
-        console.log(val);
-    }).catch(function(err) {
-        console.log(err);
-    });
+    let merchantId = getMerchantIdFromLinks(primaryUrl);
+    let fraudCount = merchantId === null ? 0 : getFraudCountFromMerchantId(merchantId) ;
     res.writeHead(200, {"Content-Type": "application/json"});
     let json = JSON.stringify({
         fraud_count: fraudCount
@@ -79,7 +68,7 @@ function getMerchantIdFromLinks(primaryUrl){
         method: 'GET'
       }, function (error, response) {
       console.log('Getting merchant info!!!!! *******');
-      //console.log('Status', response);
+      console.log('Status', response);
     });
 
     var MerchantId = process.env.MERCHANT_ID;
