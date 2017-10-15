@@ -2,32 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var currentState = ;
+   
+var numberReports = 67;
 
-var good;
-var bad;
-var verybad;
-
-switch(current){
-case state;
-	current = 1;
-case state;
-case state
-
-
-
+function updateIcon(){
+	if (numberReports >= 60){
+		chrome.browserAction.setIcon({path:"icon1.png"});
+	}else if (numberReports >= 30){
+		chrome.browserAction.setIcon({path:"icon2.png"});
+	}else {
+		chrome.browserAction.setIcon({path:"icon3.png"});
+	}		
 }
-function updateIcon() {
-  
-  
-  
-  
-  chrome.browserAction.setIcon({path:"icon" + current + ".png"});
-  current++;
 
-  if (current > max)
-    current = min;
-}
+
 
 chrome.browserAction.onClicked.addListener(updateIcon);
 updateIcon();
