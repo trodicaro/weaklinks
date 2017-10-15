@@ -5,16 +5,8 @@ const request = require('request');
 var querystring = require('querystring');
 
 router.post('/', function(req, res, next) {
-    let primaryUrl = req.body.domainName;
-    console.log(req.body.domainName);
-    let domain = getOrganizationName(primaryUrl).then(function(val) {
-        console.log(val);
-    }).catch(function(err) {
-        console.log(err);
-    });
 
-    let merchantId = getMerchantIdFromLinks(primaryUrl);
-    let fraudCount = merchantId === null ? 0 : getFraudCountFromMerchantId(merchantId) ;
+    let fraudCount = randomIntFromInterval(0,100);
     res.writeHead(200, {"Content-Type": "application/json"});
     let json = JSON.stringify({
         fraud_count: fraudCount
