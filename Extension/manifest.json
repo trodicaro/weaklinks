@@ -1,11 +1,18 @@
 {
-  "name": "A browser action which changes its icon when clicked",
+  "name": "weaklinks",
   "description": "Change browser action color when its icon is clicked",
   "version": "1.2",
+  "background": { "scripts": ["background.js"] },
   "browser_action": {
     "default_title": "Test",
     "default_popup": "index.html"
   },
+  "content_scripts": [
+    {
+	"matches": ["<all_urls>"],
+      "js": ["test.js"]
+    }
+  ],
   "permissions": [
     "activeTab",
     "<all_urls>",
