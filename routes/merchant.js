@@ -1,24 +1,22 @@
 require('dotenv').config();
 var express = require('express');
 var router = express.Router();
-var https = require('https');
 const request = require('request');
 var querystring = require('querystring');
 
-router.get('/', function(req, res, next) {
-    var domains = ["http://greensburg.k12.in.us", "https://www.facebook.com/oglethorpefeed", "https://www.yelp.com/biz/oglethorpe-feed-seed-and-farm-supply-crawford"];
-    var primaryUrl = domains[1];
-
+router.post('/', function(req, res, next) {
+    let primaryUrl = req.body.domainName;
+    console.log(req.body.domainName);
     let domain = getOrganizationName(primaryUrl).then(function(val) {
         console.log(val);
     }).catch(function(err) {
         console.err(err);
     });
 
-    var merchantId = getMerchantIdFromLinks(domain);
-    var fraudCount = merchantId === null ? 0 : getFraudCountFromMerchantId(merchantId) ;
+    let merchantId = getMerchantIdFromLinks(primaryUrl);
+    let fraudCount = merchantId === null ? 0 : getFraudCountFromMerchantId(merchantId) ;
     res.writeHead(200, {"Content-Type": "application/json"});
-    var json = JSON.stringify({
+    let json = JSON.stringify({
         fraud_count: fraudCount
     });
     res.end(json);
@@ -51,7 +49,7 @@ function getOrganizationName(domain){
     });
 }
 
-function getMerchantIdFromLinks(domains){
+function getMerchantIdFromLinks(primaryUrl){
     //  api call to see if link return merchant
     var request = require('request');
     var url = process.env.MERCHANT_VERIFICATION_POINT_API
@@ -69,8 +67,8 @@ function getMerchantIdFromLinks(domains){
         url: url + queryParams,
         method: 'GET'
       }, function (error, response) {
-      // console.log('Getting merchant info!!!!! *******');
-      //console.log('Status', response);
+      console.log('Getting merchant info!!!!! *******');
+      console.log('Status', response);
     });
 
     var MerchantId = process.env.MERCHANT_ID;
